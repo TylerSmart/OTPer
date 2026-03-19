@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="PRD.md" />
+    <File Path="README.md" />
+  </Folder>
+  <Project Path="OTPer.API/OTPer.API.csproj" />
+  <Project Path="OTPer.Core/OTPer.Core.csproj" />
+</Solution>
