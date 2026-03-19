@@ -4,8 +4,9 @@ namespace OTPer.Core.Models;
 
 public class IncomingMessage
 {
-    [Required]
-    public required string Message { get; set; }
+    public string? Sms { get; set; }
+
+    public string? Mms { get; set; }
 
     [Required]
     public required string Sender { get; set; }

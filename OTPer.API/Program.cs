@@ -7,11 +7,27 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllers();
-builder.Services.AddOpenApi();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddOpenApi(options =>
+{
+    options.AddDocumentTransformer((document, context, ct) =>
+    {
+        var httpContext = context.ApplicationServices
+            .GetRequiredService<IHttpContextAccessor>().HttpContext;
+        if (httpContext is not null)
+        {
+            var scheme = httpContext.Request.Scheme;
+            var host = httpContext.Request.Host;
+            document.Servers = [new() { Url = $"{scheme}://{host}" }];
+        }
+        return Task.CompletedTask;
+    });
+});
 
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
     options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.ForwardLimit = null;
     options.KnownIPNetworks.Clear();
     options.KnownProxies.Clear();
 });
@@ -47,6 +63,12 @@ app.MapOpenApi();
 app.MapScalarApiReference();
 
 app.UseAuthorization();
+
+app.MapGet("/api/version", () => new
+{
+    CommitSha = Environment.GetEnvironmentVariable("COMMIT_SHA") ?? "dev",
+    Environment = app.Environment.EnvironmentName
+});
 
 app.MapControllers();
 

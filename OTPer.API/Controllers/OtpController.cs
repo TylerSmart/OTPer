@@ -19,11 +19,19 @@ public class OtpController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Post([FromBody] IncomingMessage incoming)
     {
+        if (string.IsNullOrWhiteSpace(incoming.Sms) && string.IsNullOrWhiteSpace(incoming.Mms))
+        {
+            return BadRequest(new { error = "At least one of 'sms' or 'mms' must be provided." });
+        }
+
+        var textToParse = incoming.Sms ?? incoming.Mms!;
+
         var record = new OtpRecord
         {
             Sender = incoming.Sender,
-            Message = incoming.Message,
-            Code = OtpParser.ExtractCode(incoming.Message),
+            Sms = incoming.Sms,
+            Mms = incoming.Mms,
+            Code = OtpParser.ExtractCode(textToParse),
             ReceivedAt = DateTime.UtcNow
         };
 

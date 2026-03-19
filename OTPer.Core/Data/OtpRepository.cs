@@ -30,7 +30,9 @@ public class OtpRepository : IOtpRepository
 
         if (!string.IsNullOrWhiteSpace(keyword))
         {
-            query = query.Where(r => r.Message.ToLower().Contains(keyword.ToLower()));
+            query = query.Where(r =>
+                (r.Sms != null && r.Sms.ToLower().Contains(keyword.ToLower())) ||
+                (r.Mms != null && r.Mms.ToLower().Contains(keyword.ToLower())));
         }
 
         return await query

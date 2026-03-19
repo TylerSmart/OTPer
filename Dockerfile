@@ -17,4 +17,6 @@ FROM base AS final
 WORKDIR /app
 COPY --from=build /app/publish .
 VOLUME ["/app/data"]
+ARG COMMIT_SHA=dev
+ENV COMMIT_SHA=${COMMIT_SHA}
 ENTRYPOINT ["dotnet", "OTPer.API.dll"]
