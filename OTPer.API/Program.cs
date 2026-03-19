@@ -45,7 +45,7 @@ var app = builder.Build();
 // Must be first so scheme/host are correct for all downstream middleware.
 app.UseForwardedHeaders();
 
-// Ensure the database directory and tables exist.
+// Ensure the database directory exists and apply migrations.
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -56,7 +56,7 @@ using (var scope = app.Services.CreateScope())
     {
         Directory.CreateDirectory(dir);
     }
-    db.Database.EnsureCreated();
+    db.Database.Migrate();
 }
 
 app.MapOpenApi();

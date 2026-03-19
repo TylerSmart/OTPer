@@ -7,11 +7,11 @@ namespace OTPer.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class OtpController : ControllerBase
+public class OTPController : ControllerBase
 {
     private readonly IOtpRepository _repository;
 
-    public OtpController(IOtpRepository repository)
+    public OTPController(IOtpRepository repository)
     {
         _repository = repository;
     }
@@ -19,19 +19,17 @@ public class OtpController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Post([FromBody] IncomingMessage incoming)
     {
-        if (string.IsNullOrWhiteSpace(incoming.Sms) && string.IsNullOrWhiteSpace(incoming.Mms))
+        var code = OtpParser.ExtractCode(incoming.Message);
+        if (code is null)
         {
-            return BadRequest(new { error = "At least one of 'sms' or 'mms' must be provided." });
+            return UnprocessableEntity(new { error = "No OTP code found in the message." });
         }
-
-        var textToParse = incoming.Sms ?? incoming.Mms!;
 
         var record = new OtpRecord
         {
             Sender = incoming.Sender,
-            Sms = incoming.Sms,
-            Mms = incoming.Mms,
-            Code = OtpParser.ExtractCode(textToParse),
+            Message = incoming.Message,
+            Code = code,
             ReceivedAt = DateTime.UtcNow
         };
 
@@ -44,11 +42,24 @@ public class OtpController : ControllerBase
     public async Task<IActionResult> Get(
         [FromQuery] int count = 10,
         [FromQuery] string? sender = null,
-        [FromQuery] string? keyword = null)
+        [FromQuery] string? keyword = null,
+        [FromQuery] DateTime? since = null)
     {
         count = Math.Clamp(count, 1, 100);
 
-        var records = await _repository.GetRecentAsync(count, sender, keyword);
+        var records = await _repository.GetRecentAsync(count, sender, keyword, since);
         return Ok(records);
+    }
+
+    [HttpPatch("{id}/used")]
+    public async Task<IActionResult> MarkUsed(int id)
+    {
+        var record = await _repository.MarkUsedAsync(id);
+        if (record is null)
+        {
+            return NotFound();
+        }
+
+        return Ok(record);
     }
 }

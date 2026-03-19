@@ -19,7 +19,7 @@ public class OtpRepository : IOtpRepository
         return record;
     }
 
-    public async Task<List<OtpRecord>> GetRecentAsync(int count, string? sender, string? keyword)
+    public async Task<List<OtpRecord>> GetRecentAsync(int count, string? sender, string? keyword, DateTime? since)
     {
         IQueryable<OtpRecord> query = _db.OtpRecords;
 
@@ -30,14 +30,29 @@ public class OtpRepository : IOtpRepository
 
         if (!string.IsNullOrWhiteSpace(keyword))
         {
-            query = query.Where(r =>
-                (r.Sms != null && r.Sms.ToLower().Contains(keyword.ToLower())) ||
-                (r.Mms != null && r.Mms.ToLower().Contains(keyword.ToLower())));
+            query = query.Where(r => r.Message.ToLower().Contains(keyword.ToLower()));
+        }
+
+        if (since.HasValue)
+        {
+            query = query.Where(r => r.ReceivedAt >= since.Value);
         }
 
         return await query
+            .Where(r => r.Used == false)
             .OrderByDescending(r => r.ReceivedAt)
             .Take(count)
             .ToListAsync();
+    }
+
+    public async Task<OtpRecord?> MarkUsedAsync(int id)
+    {
+        var record = await _db.OtpRecords.FindAsync(id);
+        if (record is null)
+            return null;
+
+        record.Used = true;
+        await _db.SaveChangesAsync();
+        return record;
     }
 }

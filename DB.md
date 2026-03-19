@@ -1,0 +1,1 @@
+dotnet ef migrations add <MigrationName> --project OTPer.Core --startup-project OTPer.API --output-dir Data/Migrations

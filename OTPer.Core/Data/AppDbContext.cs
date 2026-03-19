@@ -15,6 +15,9 @@ public class AppDbContext : DbContext
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Sender).IsRequired();
+            entity.Property(e => e.Message).IsRequired();
+            entity.Property(e => e.Code).IsRequired();
+            entity.Property(e => e.Used).HasDefaultValue(false);
             entity.HasIndex(e => e.ReceivedAt);
         });
     }
